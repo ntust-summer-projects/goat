@@ -1,0 +1,50 @@
+{% extends 'map.html' %}
+{% block content %} 
+
+
+{% for record in records %}
+    <label>name : {{ record.name }}</label>
+    <br>
+    <label>start: {{ record.start }}</label>
+    <br>
+    <label>end: {{ record.end }}</label>
+    <br>
+    <label>time: {{ record.dateTime }}</label>
+    <br>
+    <label>point: {{ record.point }}</label>
+    <br>
+    <div id="map-{{ forloop.counter }}" style = "width:250px; height:250px;"></div> 
+    
+
+    <script>
+
+        var points = [
+            [{{ record.startPlace.y }}, {{ record.startPlace.x }}],
+            [{{ record.endPlace.y }}, {{ record.endPlace.x }}]
+        ];
+
+        var map{{ forloop.counter }} = L.map('map-{{ forloop.counter }}').setView(points[0], 3); 
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map{{ forloop.counter }}); 
+
+        
+
+        var startMarker{{ forloop.counter }} = L.marker(points[0]).addTo(map{{ forloop.counter }});
+        var endMarker{{ forloop.counter }} = L.marker(points[1]).addTo(map{{ forloop.counter }});
+
+        var polyline = L.polyline(points,{"color":"red"}).addTo(map{{ forloop.counter }});
+        var arrowStyle = {
+            patterns: [
+            { offset: '100%', repeat: 0, symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { stroke: true, 
+                    color: '#ff0000',className: 'fill-arrow' } }) }
+            ]
+        };
+        var arrowHead = L.polylineDecorator(polyline, arrowStyle).addTo(map{{ forloop.counter }});
+
+    </script>
+{% endfor %}
+
+{% endblock %}

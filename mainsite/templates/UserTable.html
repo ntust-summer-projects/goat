@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>AllUser</title>
+</head>
+<body>
+    <table class = "table">
+        <thead>
+            <tr>
+                <th>name</th>
+                <th>email</th>
+                <th>phone</th>
+                <th>wallet</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phone }}</td>
+                <td>{{ user.wallet }}</td>
+            <tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>AllUser</title>
+</head>
+<body>
+    {% load leaflet_tags %}
+    {% leaflet_css %}
+    {% leaflet_js %}
+
+    <div>
+        <h1>{{ records.user.name }}</h1>
+        {% leaflet_map "main" callback="map_init" %}
+    </div>
+
+    <script type="text/javascript">
+        function map_init(map, options) {
+            // get point lat and lon
+            var lon = "{{ records.startPlace.x }}";
+            var lat = "{{ records.startPlace.y }}";
+
+            // zoom to point & add it to map
+            map.setView([lat, lon], 12);
+            L.marker([lat, lon]).addTo(map);
+        }
+    </script>
+</body>
+</html>
