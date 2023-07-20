@@ -24,6 +24,11 @@ class ProductSerializer(serializers.ModelSerializer):
 class ComponentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Component
-        fields = '__all__'        
+        fields = '__all__'    
+        
+class MaterialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Material
+        fields = '__all__'     
 
   

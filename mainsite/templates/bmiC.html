@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BMICalculate</title>
+    <script src="https://unpkg.com/vue@next"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="border">
+        <div id = "cal">
+            <div v-text = "t"></div>
+            <br>
+            <div v-html = "t2"></div>
+            <br>
+            <div v-once v-text = "t"></div>
+            <input type="text" v-model.trim.number = "weight" placeholder="Please input weight">
+            <input type="text" v-model.trim.lazy.number = "height" placeholder="Please input height">
+            <br>
+            <h1>BMI_Methods:  { calculateBMIM() }%</h1>
+            <h1 v-once>BMI_Computed:  { calculateBMIC }%</h1>
+
+            <button :disabled = "!(weight && height)" @click = "c">Clear</button>
+        </div>
+    </div>
+
+
+
+    <script>
+
+        const { createApp, ref } = Vue;
+
+        const vm =  createApp ({
+            delimiters: ['{', '}%'],
+            setup(){
+                return { weight: ref(), height: ref(10),t: this.height,t2: '<h1>1234</h1>'};
+            },
+
+            methods:{
+                calculateBMIM(){
+                    return this.weight / (this.height * this.height).toFixed(2)
+                },
+
+                c(){
+                    this.height = '';
+                }
+            },
+
+            computed:{
+                calculateBMIC(){
+                    return this.weight / (this.height * this.height).toFixed(2)
+                }
+            },
+        }).mount('#cal');
+
+    </script>
+
+</body>
+</html>
