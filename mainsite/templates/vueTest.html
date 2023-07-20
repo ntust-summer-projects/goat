@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+    <div id="app">
+        %{ message }%
+        <br>
+        %{ m }%
+        <br>
+        %{ m2 }%
+        <br>
+        <input type="text" v-model="name">
+    </div>
+
+    <div id="app2">
+        %{ message }%
+        <br>
+        %{ m }%
+        <br>
+        %{ changeMessage() }%
+        <br>
+        <input type="text" v-model="name">
+    </div>
+
+
+    <script>
+
+        const { createApp, ref } = Vue;
+
+        const message = ref('Hello World');
+
+        const dataObj = {
+            message:  message,
+            m: message,
+            m2: message.value,
+            name: ref('John')
+        };
+    
+        const vm = createApp({
+            delimiters: ['%{', '}%'],
+            setup() {
+                dataObj.message.value = 'Hello';
+                dataObj.message.value = '123';
+                return dataObj
+            }
+        }).mount('#app');
+
+        const vm2 = createApp({
+            delimiters: ['%{', '}%'],
+            setup() {
+                dataObj.message.value = 'Hello2';
+                dataObj.message.value = '1232';
+                return dataObj 
+            },
+
+            methods:{
+                changeMessage(){
+                    return this.message+this.name;
+                }
+            }
+        }).mount('#app2');
+
+        vm.message = '789';
+        vm.name = "John2";
+        vm.m2 = "m2";
+    
+    </script>
+</body>
+</html>

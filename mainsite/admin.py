@@ -10,7 +10,7 @@ class UserAdmin(admin.GISModelAdmin):
 
 @admin.register(Record)
 class RecordAdmin(admin.GISModelAdmin):
-    list_display = ('user','start','end','routeLength','point')
+    list_display = ('user','start','end','routeLength')
     formfield_overrides = {
         models.PointField: {"widget": MapboxPointFieldWidget}
     }
@@ -25,5 +25,10 @@ class ProductAdmin(admin.GISModelAdmin):
     
 @admin.register(Component)
 class ComponentAdmin(admin.GISModelAdmin):
-    list_display = ('id','product','name','material','weight','carbonEmission')
+    list_display = ('id','product','material','weight','carbonEmission')
+
+@admin.register(Material)
+class MaterialAdmin(admin.GISModelAdmin):
+    list_display = ('CName','EName','carbonEmission')
+
     
