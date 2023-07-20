@@ -191,7 +191,8 @@ class Material(models.Model):
     EName = models.CharField(max_length = 50, default = "Unknown")
     carbonEmission = models.FloatField(default = 0.0)
     
-    unique_together = ('CName', 'EName')
+    class Meta:
+        unique_together = ['CName', 'EName']
     
     def __str__(self):
         return self.CName
