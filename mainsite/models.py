@@ -7,6 +7,7 @@ from django.dispatch import receiver
 import requests
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from auditlog.registry import auditlog
+from auditlog.models import LogEntry
 
 # Create your models here.
 
@@ -195,8 +196,28 @@ class Product(models.Model):
     
     def save(self, *args, **kwargs):
         self.carbonEmission = self.getEmission()
+        self.getLog()
         super().save(*args, **kwargs)
 
+    def getLog(self):
+        print("**************log")
+        history = LogEntry.objects.filter(object_id = self.pk)
+        
+        for entry in history:
+            try:
+                print(entry.changes)
+                print(entry.object_id)
+                print(entry.object_repr)
+                print(entry.content_type)
+                print(entry.timestamp)
+                print(entry.actor)
+                print(entry.serialized_data)
+                print(entry.remote_addr)
+                print(entry.additional_data)
+            except Exception as e:
+                print(f"{e}")
+            
+        return LogEntry.objects.filter(object_id = self.pk)
     
 class Material(models.Model):
     CName = models.CharField(max_length = 50, default = "未知")
@@ -272,8 +293,9 @@ def delete_photo(sender, instance, using, **kwargs):
     instance.photo.delete(save = True)
     
     
-auditlog.register(Product)
-auditlog.register(Product.materials.through)
+auditlog.register(Product,serialize_data=True)
+auditlog.register(Product.materials.through,serialize_data=True)
+
 
 
 
