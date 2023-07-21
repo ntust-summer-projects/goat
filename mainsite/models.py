@@ -6,6 +6,8 @@ from django.db.models.signals import pre_delete, post_delete
 from django.dispatch import receiver
 import requests
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from auditlog.registry import auditlog
+
 # Create your models here.
 
 geolocator = Nominatim(user_agent="djangoTest, email = ian523411756@gmail.com")
@@ -135,19 +137,29 @@ class Record(models.Model):
     def __str__(self):
         return f"{self.user.name} from {self.start} to {self.end}, length = {self.routeLength} km, get {self.point} points."
     
-class Company(models.Model):
+    
+class Company(AbstractBaseUser):
     name = models.CharField(max_length = 20, editable = False, default = "Unknown")
     vatNumber = models.CharField(max_length = 8, unique = True, default = "00000000", primary_key=True)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length = 50, unique = True)
     password = models.CharField(max_length = 50)
+    principal = models.CharField(max_length = 20, blank = True)
+    contactPerson = models.CharField(max_length = 20, blank = True)
+    address = models.CharField(max_length = 200, blank = True)
+    
+    USERNAME_FIELD = 'vatNumber'
+    REQUIRED_FIELDS = ['phone', 'password', 'email', 'principal', 'contactPerson', 'address']
     
     def __str__(self):
         return f"{self.vatNumber} { self.name }"
     
     def save(self, *args, **kwargs):# use vatNumber to get company name
         self.name = getComponyName(self.vatNumber)
-        super().save(*args, **kwargs)
+        if self.name == "Unknown":
+            raise ValueError('Company does not exist')
+        else:
+            super().save(*args, **kwargs)
         
 
 # product model
@@ -184,7 +196,7 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         self.carbonEmission = self.getEmission()
         super().save(*args, **kwargs)
-    
+
     
 class Material(models.Model):
     CName = models.CharField(max_length = 50, default = "未知")
@@ -258,6 +270,12 @@ def delete_wallet_point(sender, instance, using, **kwargs):
 @receiver(pre_delete, sender = Product, dispatch_uid = 'product_delete_signal')
 def delete_photo(sender, instance, using, **kwargs):
     instance.photo.delete(save = True)
+    
+    
+auditlog.register(Product)
+auditlog.register(Product.materials.through)
+
+
 
  
 
