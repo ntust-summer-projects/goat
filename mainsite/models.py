@@ -234,7 +234,6 @@ class Transportation(models.Model):
             super().save(*args, **kwargs)
             for log in self.logtprofile_set.filter(transportation = self):
                 log.save()
-        
         else:
             super().save(*args, **kwargs)
         
@@ -263,8 +262,7 @@ class LogTManager(models.Manager):
         return result
     
     def create(self, **kwargs):
-        log = self.model(user = kwargs.get('user'))
-        kwargs.pop('user')
+        log = self.model(user = kwargs.pop('user', None))
         log.save(force_insert = True, **kwargs)
     
 class LogT(AbstractLog):
@@ -280,21 +278,16 @@ class LogT(AbstractLog):
         proxy = True
         
     def __str__(self): 
-        try:
-            print(self.logtprofile.transportation)
-        except:
-            pass
         return f"{ self.pk }"
     
     def save(self, *args, **kwargs):
-        super().save(*args, force_insert = kwargs.get('force_insert', False), force_update = kwargs.get('force_update', False))
+        super().save(*args, force_insert = kwargs.pop('force_insert',False), force_update = kwargs.pop('force_update', False))
         try:
             self.logtprofile
         except:
             kwargs.setdefault('distance', 0)
             kwargs.setdefault('transportation', Transportation.objects.get(pk = 1))
             kwargs.setdefault('log', self)
-            kwargs.pop('force_insert')
             LogTProfile.objects.create(**kwargs)
         
     
@@ -326,8 +319,7 @@ class LogIManager(models.Manager):
         return result
     
     def create(self, **kwargs):
-        log = self.model(user = kwargs.get('user'))
-        kwargs.pop('user')
+        log = self.model(user = kwargs.pop('user', None))
         log.save(force_insert = True, **kwargs)
         
     
@@ -344,14 +336,13 @@ class LogI(AbstractLog):
         proxy = True
         
     def save(self, *args, **kwargs):
-        super().save(*args, force_insert = kwargs.get('force_insert', False), force_update = kwargs.get('force_update', False))
+        super().save(*args, force_insert = kwargs.pop('force_insert', False), force_update = kwargs.pop('force_update', False))
         try:
             self.logiprofile
         except:
             kwargs.setdefault('amount', 0)
             kwargs.setdefault('product', Product.objects.get(pk = 1))
             kwargs.setdefault('log', self)
-            kwargs.pop('force_insert')
             LogIProfile.objects.create(**kwargs)
         
 class LogIProfile(models.Model):
@@ -422,10 +413,13 @@ auditlog.register(Product.materials.through,serialize_data=True)
 
  
 try:
-    print("=======")
+    print("=======test========")
     print(User.objects.get(pk = 1))
     print(Transportation.objects.get(pk = 1))
     LogT.objects.create(user = User.objects.get(pk = 1), distance = 99, transportation = Transportation.objects.get(pk = 1))
+    LogT(user=User.objects.get(pk=2)).save(distance = 777, transportation = Transportation.objects.get(pk = 1))
+    LogI.objects.create(user = User.objects.get(pk = 1), product = Product.objects.get(pk=1), amount = 99)
+    LogI(user = User.objects.get(pk = 2)).save(product = Product.objects.get(pk=2), amount = 101)
 except Exception as e:
-    print(e)
+    print("error : ",f"{ e }")
 
