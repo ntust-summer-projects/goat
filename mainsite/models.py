@@ -269,7 +269,6 @@ class AbstractLog(models.Model):
     objects = LogManager()
     
     def save(self, *args, **kwargs):
-        print(kwargs)
         LogManager.create(user = self.user, logType = self.logType, **kwargs)
 
     def _save(self, *args, **kwargs):
