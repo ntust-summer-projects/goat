@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'djangoTest.wsgi.application'
 DATABASES = {
     'default': {
     'ENGINE': 'django.contrib.gis.db.backends.mysql',
-    'NAME': 'demo3',                       
+    'NAME': 'demo4',                       
     'USER': 'root',                     
     'PASSWORD': 'ian523411756',            
     'HOST': '',                           
@@ -94,7 +94,7 @@ DATABASES = {
     }
 }
 
-#AUTH_USER_MODEL = 'mainsite.User'
+AUTH_USER_MODEL = 'mainsite.User'
 
 
 # Password validation

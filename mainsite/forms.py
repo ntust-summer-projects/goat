@@ -11,6 +11,7 @@ FIRST_WIDGET_SETTINGS = {
     ),
 }
 
+'''
 class RecordForm(forms.ModelForm):
     #location_has_default = PointField(widget=MapboxPointFieldWidget(settings=FIRST_WIDGET_SETTINGS))
     class Meta:
@@ -19,4 +20,4 @@ class RecordForm(forms.ModelForm):
         widgets = {
             'startPlace': GooglePointFieldWidget,
             'endPlace': GooglePointFieldWidget,
-        }
+        }'''
