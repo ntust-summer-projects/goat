@@ -133,9 +133,10 @@ class Product(models.Model):
         return self.name
     
     def save(self, *args, **kwargs):
-        self.carbonEmission = self.getEmission()
-        self.getLog()
+        if self.pk:
+            self.carbonEmission = self.getEmission()
         super().save(*args, **kwargs)
+        #self.getLog()
 
     def getLog(self):
         print("**************log")
@@ -169,16 +170,13 @@ class Material(models.Model):
         return f"{ self.EName } { self.CName }"
     
     def save(self, *args, **kwargs):
-        if self.pk != None:
-            oldData = Material.objects.get(pk = self.pk)
-            
-            if oldData.carbonEmission != self.carbonEmission:
-                super().save(*args, **kwargs)
-                for component in self.component_set.filter(material = self):
-                    component.save()
-                return
-        
-        super().save(*args, **kwargs)
+        if self.pk and Material.objects.get(pk = self.pk).carbonEmission != self.carbonEmission:
+            kwargs['force_update'] = True
+            super().save(*args, **kwargs)
+            for component in self.component_set.filter(material = self):
+                component.save(force_update = True)
+        else:  
+            super().save(*args, **kwargs)
             
     
 class Component(models.Model):
@@ -200,23 +198,17 @@ class Component(models.Model):
     def save(self, *args, **kwargs):
         self.carbonEmission = self.getEmission()
         
-        if self.pk != None:
-            oldData = Component.objects.get(pk = self.pk)
-        
-            if oldData.carbonEmission != self.carbonEmission:
-                super().save(*args, **kwargs)
-                self.product.save()
-                return
+        if self.pk and Component.objects.get(pk = self.pk).carbonEmission == self.carbonEmission:
+            kwargs['force_update'] = True
+            super().save(*args, **kwargs)
         else:
             super().save(*args, **kwargs)
-            self.product.save()
-            return
+            self.product.save(force_update = True)
         
-        super().save(*args, **kwargs)
         
 @receiver(post_delete, sender = Component, dispatch_uid = 'component_delete_signal')
-def delete_carbonEmission(sender, instance, using, **kwargs):
-    instance.product.save()
+def update_carbonEmission(sender, instance, using, **kwargs):
+    instance.product.save(force_update = True)
     
 '''
 @receiver(pre_delete, sender = TransportationLog, dispatch_uid = 'transportationLog_delete_signal')
@@ -238,25 +230,22 @@ class Transportation(models.Model):
         return self.name
     
     def save(self, *args, **kwargs):
-        try:
-            oldData = Transportation.objects.get(pk = self.pk)
-            
-            if oldData.carbonEmission != self.carbonEmission:
-                super().save(*args, **kwargs)
-                for record in self.record_set.filter(transportation = self):
-                    record.save()
-                return
+        if self.pk and Transportation.objects.get(pk = self.pk).carbonEmission != self.carbonEmission:
+            super().save(*args, **kwargs)
+            for log in self.logtprofile_set.filter(transportation = self):
+                log.save()
         
-        except Transportation.DoesNotExist:
-            pass
-        super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
         
 class AbstractLog(models.Model):
     class LogType(models.TextChoices):
         TRANSPORTATION = "TRANSPORTATION", 'transportation'
         ITEM = "ITEM", 'item'
     
-    user = models.ForeignKey(Normal, on_delete=models.CASCADE)
+    baseType = LogType.TRANSPORTATION
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     logType = models.CharField(max_length=50, choices=LogType.choices,default = LogType.TRANSPORTATION)
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     timestamp = models.DateTimeField(
@@ -264,18 +253,22 @@ class AbstractLog(models.Model):
         db_index=True,
     )
     
+    def save(self, *args, **kwargs):
+        self.logType = self.baseType
+        super().save(*args,**kwargs)
+    
 class LogTManager(models.Manager):
     def get_queryset(self,*args,**kwargs):
         result = super().get_queryset(*args,**kwargs).filter(logType=AbstractLog.LogType.TRANSPORTATION)
         return result
     
-    def create(self, *args, **kwargs):
-        log = super().create(*args, **kwargs)
-        logtprofile = LogTProfile.objects.create(log = log, distance = distance, transportation = transportation)
-        return log
+    def create(self, **kwargs):
+        log = self.model(user = kwargs.get('user'))
+        kwargs.pop('user')
+        log.save(force_insert = True, **kwargs)
     
 class LogT(AbstractLog):
-    logType = AbstractLog.LogType.TRANSPORTATION
+    baseType = AbstractLog.LogType.TRANSPORTATION
     
     objects = LogTManager()
     
@@ -285,39 +278,61 @@ class LogT(AbstractLog):
     
     class Meta:
         proxy = True
+        
+    def __str__(self): 
+        try:
+            print(self.logtprofile.transportation)
+        except:
+            pass
+        return f"{ self.pk }"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, force_insert = kwargs.get('force_insert', False), force_update = kwargs.get('force_update', False))
+        try:
+            self.logtprofile
+        except:
+            kwargs.setdefault('distance', 0)
+            kwargs.setdefault('transportation', Transportation.objects.get(pk = 1))
+            kwargs.setdefault('log', self)
+            kwargs.pop('force_insert')
+            LogTProfile.objects.create(**kwargs)
+        
     
 
 class LogTProfile(models.Model):
-    log = models.OneToOneField(LogT, on_delete=models.CASCADE)
+    log = models.OneToOneField(LogT, on_delete=models.CASCADE, primary_key=True)
     distance = models.FloatField(blank = True, default = 0.0)
     #point = models.PositiveBigIntegerField(editable = False, default = 0)
-    transportation = models.ForeignKey(Transportation, on_delete=models.CASCADE, default = 1)
+    transportation = models.ForeignKey(Transportation, on_delete=models.CASCADE, related_name = 'logs', default = 1)
     
     def getEmission(self):
         return self.distance * self.transportation.carbonEmission
     
 
     def save(self, *args, **kwargs):
-        self.carbonEmission = self.getEmission()
+        super().save(*args, **kwargs)
+        self.log.carbonEmission = self.getEmission()
+        self.log.save(force_update = True)
         #self.user.wallet += self.point
         #self.user.save()
-        super().save(*args, **kwargs)
+        
 
     def __str__(self):
-        return { self.pk }
+        return f"{ self.log.pk }"
   
 class LogIManager(models.Manager):
     def get_queryset(self,*args,**kwargs):
         result = super().get_queryset(*args,**kwargs).filter(logType=AbstractLog.LogType.ITEM)
         return result
     
-    def create(self, *args, **kwargs):
-        log = super().create(*args, **kwargs)
-        logiprofile = LogIProfile.objects.create(log = log, product = product, amount = amount)
-        return log
+    def create(self, **kwargs):
+        log = self.model(user = kwargs.get('user'))
+        kwargs.pop('user')
+        log.save(force_insert = True, **kwargs)
+        
     
 class LogI(AbstractLog):
-    logType = AbstractLog.LogType.ITEM
+    baseType = AbstractLog.LogType.ITEM
     
     objects = LogIManager()
     
@@ -328,8 +343,19 @@ class LogI(AbstractLog):
     class Meta:
         proxy = True
         
+    def save(self, *args, **kwargs):
+        super().save(*args, force_insert = kwargs.get('force_insert', False), force_update = kwargs.get('force_update', False))
+        try:
+            self.logiprofile
+        except:
+            kwargs.setdefault('amount', 0)
+            kwargs.setdefault('product', Product.objects.get(pk = 1))
+            kwargs.setdefault('log', self)
+            kwargs.pop('force_insert')
+            LogIProfile.objects.create(**kwargs)
+        
 class LogIProfile(models.Model):
-    log  = models.OneToOneField(LogI, on_delete=models.CASCADE)
+    log  = models.OneToOneField(LogI, on_delete=models.CASCADE, primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, default = 1)
     amount = models.PositiveBigIntegerField(default = 0)
     
@@ -337,8 +363,17 @@ class LogIProfile(models.Model):
         return self.amount * self.product.carbonEmission
     
     def save(self, *args, **kwargs):
-        self.carbonEmission = self.getEmission()
         super().save(*args, **kwargs)
+        self.log.carbonEmission = self.getEmission()
+        self.log.save(force_update = True)
+        
+    def __str__(self):
+        return f"{ self.log.pk }"
+
+@receiver(post_delete, sender=LogIProfile)
+@receiver(post_delete, sender=LogTProfile)
+def delete_log_on_logProfile_delete(sender, instance, **kwargs):
+    instance.log.delete()
 '''
 class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -384,6 +419,13 @@ auditlog.register(Product.materials.through,serialize_data=True)
 
 
 
- 
 
+ 
+try:
+    print("=======")
+    print(User.objects.get(pk = 1))
+    print(Transportation.objects.get(pk = 1))
+    LogT.objects.create(user = User.objects.get(pk = 1), distance = 99, transportation = Transportation.objects.get(pk = 1))
+except Exception as e:
+    print(e)
 
