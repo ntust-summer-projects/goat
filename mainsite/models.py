@@ -376,6 +376,7 @@ try:
     LogI(user = User.objects.get(pk = 2), product = Product.objects.get(pk=2), amount = 101).save()
     AbstractLog.objects.create(user = User.objects.get(pk = 1), logType = AbstractLog.LogType.TRANSPORTATION, distance = 87, transportation = Transportation.objects.get(pk = 2))
     AbstractLog(user = User.objects.get(pk = 2), logType = AbstractLog.LogType.ITEM).save(product = Product.objects.get(pk=2), amount = 69)
+    LogManager.create(user = User.objects.get(pk = 1), logType = AbstractLog.LogType.TRANSPORTATION, distance = 1234, transportation = Transportation.objects.get(pk = 2))
 except Exception as e:
     print("error : ",f"{ e }")
 
