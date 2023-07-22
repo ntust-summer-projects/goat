@@ -6,10 +6,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
         
+'''
 class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
-        fields = '__all__'
+        fields = '__all__' '''
         
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:

@@ -23,7 +23,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 router = DefaultRouter()
 router.register(r'users', view.UserViewSet, basename='user')
-router.register(r'records', view.RecordViewSet, basename='record')
+#router.register(r'records', view.RecordViewSet, basename='record')
 router.register(r'companys', view.CompanyViewSet, basename='Company')
 
 
@@ -31,10 +31,10 @@ router.register(r'companys', view.CompanyViewSet, basename='Company')
 urlpatterns = [
    path('admin/', admin.site.urls),
    path('userTable/', view.getAllUser, name = "userTable"),
-   path('inputRecord/', view.postInputRecordForm, name = "inputRecord"),
-   path('getRecord/', view.getAllRecord, name = "getAllRecord"),
+   #path('inputRecord/', view.postInputRecordForm, name = "inputRecord"),
+   #path('getRecord/', view.getAllRecord, name = "getAllRecord"),
    re_path(r'^api/', include(router.urls)),
-   re_path('^api/users/getRecords/(?P<user_id>.+)/$', view.RecordList.as_view()),
+   #re_path('^api/users/getRecords/(?P<user_id>.+)/$', view.RecordList.as_view()),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

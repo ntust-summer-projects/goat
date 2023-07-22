@@ -3,13 +3,13 @@ from mainsite.models import *
 from django.contrib.gis.db import models
 from mapwidgets.widgets import MapboxPointFieldWidget
 # Register your models here.
-
+'''
 @admin.register(User)
 class UserAdmin(admin.GISModelAdmin):
-    list_display = ('name','email','phone','wallet')
+    list_display = ('name','email','phone')
 
 @admin.register(Record)
-class RecordAdmin(admin.GISModelAdmin):
+class TRecordAdmin(admin.GISModelAdmin):
     list_display = ('user','start','end','routeLength')
     formfield_overrides = {
         models.PointField: {"widget": MapboxPointFieldWidget}
@@ -17,7 +17,7 @@ class RecordAdmin(admin.GISModelAdmin):
     
 @admin.register(Company)
 class CompanyAdmin(admin.GISModelAdmin):
-    list_display = ('vatNumber','name','email','phone')
+    list_display = ('vatNumber','name','email','phone')'''
     
 @admin.register(Product)
 class ProductAdmin(admin.GISModelAdmin):
